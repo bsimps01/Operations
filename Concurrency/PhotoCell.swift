@@ -32,6 +32,11 @@ final class PhotoCell: UITableViewCell {
   @IBOutlet private weak var nasaImageView: UIImageView!
   @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
   
+  override func prepareForReuse() {
+    nasaImageView.image = nil
+    activityIndicator.startAnimating()
+  }
+  
   var isLoading: Bool {
     get { return activityIndicator.isAnimating }
     set {

@@ -27,3 +27,16 @@
 /// THE SOFTWARE.
 
 import Foundation
+import UIKit
+
+protocol ImageDataProvider {
+  var image: UIImage? { get }
+}
+
+extension NetworkImageOperation: ImageDataProvider {}
+
+extension TiltShiftOperation: ImageDataProvider {
+  var image: UIImage? { return outputImage }
+}
+
+

@@ -30,16 +30,49 @@ import UIKit
 
 class TiltShiftTableViewController: UITableViewController {
   
+  let operationQueue = OperationQueue()
+  
+  private var urls: [URL] = []
+  
   override func viewDidLoad() {
     super.viewDidLoad()
+    guard let plist = Bundle.main.url(forResource: "Photos",
+                                      withExtension: "plist"),
+          let contents = try? Data(contentsOf: plist),
+          let serial = try? PropertyListSerialization.propertyList(
+                            from: contents,
+                            format: nil),
+          let serialUrls = serial as? [String] else {
+          print("Something went horribly wrong!")
+          return
   }
+    urls = serialUrls.compactMap(URL.init)
+  }
+
   
   override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
     return 5
   }
 
   override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-    let cell = tableView.dequeueReusableCell(withIdentifier: "normal", for: indexPath) as! PhotoCell
-    return cell
-  }
+     let cell = tableView.dequeueReusableCell(withIdentifier: "normal", for: indexPath) as! PhotoCell
+
+     let networkOperation = NetworkImageOperation(url: urls[indexPath.row])
+     let tiltShiftOp = TiltShiftOperation()
+     tiltShiftOp.addDependency(networkOperation)
+     tiltShiftOp.completionBlock = {
+      DispatchQueue.main.async {
+        guard let cell = tableView.cellForRow(at: indexPath) as? PhotoCell else { return }
+        cell.isLoading = false
+        cell.display(image: tiltShiftOp.outputImage)
+      }
+    }
+     operationQueue.addOperation(tiltShiftOp)
+     operationQueue.addOperation(networkOperation)
+     return cell
+   }
+
+
+
+
 }

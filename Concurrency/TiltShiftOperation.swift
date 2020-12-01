@@ -30,7 +30,38 @@ import UIKit
 
 final class TiltShiftOperation: Operation {
   
+  private static let context = CIContext()
   
+  var outputImage: UIImage?
+  var inputImage: UIImage?
+  
+  init(image: UIImage? = nil) {
+      inputImage = image
+      super.init()
+  }
+  
+  override func main() {
+    
+    let dependencyImage = dependencies
+      .compactMap { ($0 as? ImageDataProvider)?.image }
+      .first
+    guard let inputImage = inputImage ?? dependencyImage else {
+    return
+    }
+    guard let filter = TiltShiftFilter(image: inputImage, radius:3),
+        let output = filter.outputImage else {
+          print("Failed to generate tilt shift image")
+          return
+      }
+
+      let fromRect = CGRect(origin: .zero, size: inputImage.size)
+      guard let cgImage = TiltShiftOperation.context.createCGImage(output, from: fromRect) else {
+        print("No image generated")
+        return
+      }
+      outputImage = UIImage(cgImage: cgImage)
+    }
+
 
 }
 
